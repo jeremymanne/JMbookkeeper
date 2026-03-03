@@ -174,7 +174,7 @@ export function TransactionForm({ categories, vendors: initialVendors, transacti
             <div className="space-y-2">
               <Label>Category</Label>
               <Select
-                value={form.watch("categoryId") ?? ""}
+                value={form.watch("categoryId") ?? undefined}
                 onValueChange={(val) => form.setValue("categoryId", val || null)}
               >
                 <SelectTrigger>
