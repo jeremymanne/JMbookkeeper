@@ -314,6 +314,20 @@ export async function deleteInvoice(id: string) {
   }
 }
 
+export async function updatePaymentNote(id: string, paymentNote: string) {
+  try {
+    await prisma.invoice.update({
+      where: { id },
+      data: { paymentNote: paymentNote || null },
+    });
+    revalidatePath("/invoices");
+    revalidatePath(`/invoices/${id}`);
+    return { success: true as const };
+  } catch (e) {
+    return { success: false as const, error: "Failed to update note" };
+  }
+}
+
 export async function markInvoicePaid(
   id: string,
   paymentNote?: string,

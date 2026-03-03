@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Header } from "@/components/layout/header";
 import { InvoicePreview } from "@/components/invoices/invoice-preview";
 import { InvoiceStatusActions } from "@/components/invoices/invoice-status-actions";
+import { PaymentNoteEditor } from "@/components/invoices/payment-note-editor";
 import { getInvoice } from "@/app/invoices/actions";
 import { getSettings } from "@/app/settings/actions";
 import { Button } from "@/components/ui/button";
@@ -22,10 +23,6 @@ export default async function InvoiceViewPage({ params }: Props) {
 
   if (!invoice) return notFound();
 
-  const hasPaymentInfo =
-    invoice.status === "paid" &&
-    (invoice.transactions.length > 0 || invoice.paymentNote);
-
   return (
     <>
       <Header title={`Invoice ${invoice.invoiceNumber}`}>
@@ -39,7 +36,7 @@ export default async function InvoiceViewPage({ params }: Props) {
         </div>
       </Header>
       <div className="p-6">
-        {hasPaymentInfo && (
+        {invoice.status === "paid" && (
           <Card className="mb-6 print:hidden">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
@@ -92,14 +89,15 @@ export default async function InvoiceViewPage({ params }: Props) {
                   </ul>
                 </div>
               )}
-              {invoice.paymentNote && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
-                    Payment Note
-                  </p>
-                  <p className="text-sm">{invoice.paymentNote}</p>
-                </div>
-              )}
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">
+                  Notes
+                </p>
+                <PaymentNoteEditor
+                  invoiceId={invoice.id}
+                  currentNote={invoice.paymentNote}
+                />
+              </div>
             </CardContent>
           </Card>
         )}
