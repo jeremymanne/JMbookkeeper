@@ -38,6 +38,7 @@ interface Transaction {
   source: string | null;
   paymentMethod: string | null;
   category: { id: string; name: string; color: string } | null;
+  clientRef: { id: string; name: string } | null;
 }
 
 interface TransactionTableProps {
@@ -92,6 +93,7 @@ export function TransactionTable({
           <TableRow>
             <TableHead>Date</TableHead>
             <TableHead>Description</TableHead>
+            <TableHead>Client</TableHead>
             <TableHead>Category</TableHead>
             <TableHead>Type</TableHead>
             <TableHead className="text-right">Amount</TableHead>
@@ -114,6 +116,18 @@ export function TransactionTable({
                     </span>
                   )}
                 </div>
+              </TableCell>
+              <TableCell>
+                {txn.clientRef ? (
+                  <Link
+                    href={`/clients/${txn.clientRef.id}`}
+                    className="text-blue-600 hover:underline text-sm"
+                  >
+                    {txn.clientRef.name}
+                  </Link>
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )}
               </TableCell>
               <TableCell>
                 {txn.category && (

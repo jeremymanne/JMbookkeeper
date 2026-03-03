@@ -50,6 +50,7 @@ export async function getTransactions(filters: TransactionFilters = {}) {
       include: {
         category: true,
         invoice: { select: { id: true, invoiceNumber: true } },
+        clientRef: { select: { id: true, name: true } },
       },
       orderBy: { date: "desc" },
       skip: (page - 1) * pageSize,
