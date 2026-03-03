@@ -57,6 +57,7 @@ export async function createClient(data: ClientFormData) {
     const client = await prisma.client.create({ data: parsed.data });
     revalidatePath("/clients");
     revalidatePath("/invoices");
+    revalidatePath(`/clients/${client.id}`);
     return { success: true as const, data: client };
   } catch (e) {
     return { success: false as const, error: "Failed to create client" };
@@ -76,6 +77,7 @@ export async function updateClient(id: string, data: ClientFormData) {
     });
     revalidatePath("/clients");
     revalidatePath("/invoices");
+    revalidatePath(`/clients/${id}`);
     return { success: true as const, data: client };
   } catch (e) {
     return { success: false as const, error: "Failed to update client" };
@@ -96,6 +98,7 @@ export async function deleteClient(id: string) {
 
     await prisma.client.delete({ where: { id } });
     revalidatePath("/clients");
+    revalidatePath(`/clients/${id}`);
     return { success: true as const };
   } catch (e) {
     return { success: false as const, error: "Failed to delete client" };
@@ -109,6 +112,7 @@ export async function toggleClientActive(id: string, isActive: boolean) {
       data: { isActive },
     });
     revalidatePath("/clients");
+    revalidatePath(`/clients/${id}`);
     return { success: true as const };
   } catch (e) {
     return { success: false as const, error: "Failed to update client" };

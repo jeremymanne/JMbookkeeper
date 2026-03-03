@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
-import { TrendingUp, TrendingDown, DollarSign, RefreshCw, FileText } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, RefreshCw, FileText, Calendar } from "lucide-react";
 
 interface SummaryCardsProps {
   periodLabel: string;
@@ -11,6 +11,7 @@ interface SummaryCardsProps {
   totalMonthlyRetainer: number;
   outstandingCount: number;
   outstandingTotal: number;
+  ytdNetProfit: number;
 }
 
 export function SummaryCards({
@@ -21,6 +22,7 @@ export function SummaryCards({
   totalMonthlyRetainer,
   outstandingCount,
   outstandingTotal,
+  ytdNetProfit,
 }: SummaryCardsProps) {
   const cards = [
     {
@@ -51,10 +53,17 @@ export function SummaryCards({
       color: "text-blue-600",
       bg: "bg-blue-50",
     },
+    {
+      title: "2026 YTD Net Profit",
+      value: ytdNetProfit,
+      icon: Calendar,
+      color: ytdNetProfit >= 0 ? "text-emerald-600" : "text-red-600",
+      bg: ytdNetProfit >= 0 ? "bg-emerald-50" : "bg-red-50",
+    },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
       {cards.map((card) => (
         <Card key={card.title}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">

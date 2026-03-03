@@ -160,6 +160,21 @@ export async function getDashboardData(filters?: DashboardFilters) {
     include: { category: true },
   });
 
+  // 2026 YTD net profit (always computed regardless of filter)
+  const ytdStart = new Date(2026, 0, 1);
+  const ytdEnd = new Date();
+  const ytdTransactions = await prisma.transaction.findMany({
+    where: { date: { gte: ytdStart, lte: ytdEnd } },
+    select: { type: true, amount: true },
+  });
+  const ytdIncome = ytdTransactions
+    .filter((t) => t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0);
+  const ytdExpenses = ytdTransactions
+    .filter((t) => t.type === "expense")
+    .reduce((sum, t) => sum + t.amount, 0);
+  const ytdNetProfit = ytdIncome - ytdExpenses;
+
   // Outstanding invoices
   const unpaidInvoices = await prisma.invoice.findMany({
     where: { status: "unpaid" },
@@ -207,5 +222,6 @@ export async function getDashboardData(filters?: DashboardFilters) {
       monthlyRetainer: c.monthlyRetainer ?? 0,
     })),
     totalMonthlyRetainer: Math.round(totalMonthlyRetainer * 100) / 100,
+    ytdNetProfit: Math.round(ytdNetProfit * 100) / 100,
   };
 }

@@ -87,7 +87,14 @@ export function ClientTable({ clients }: ClientTableProps) {
       <TableBody>
         {clients.map((client) => (
           <TableRow key={client.id}>
-            <TableCell className="font-medium">{client.name}</TableCell>
+            <TableCell className="font-medium">
+                  <Link
+                    href={`/clients/${client.id}`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    {client.name}
+                  </Link>
+                </TableCell>
             <TableCell>{client.contactName || "—"}</TableCell>
             <TableCell>
               <div className="text-sm">

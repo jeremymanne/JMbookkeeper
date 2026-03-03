@@ -52,6 +52,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           totalMonthlyRetainer={data.totalMonthlyRetainer}
           outstandingCount={data.outstandingCount}
           outstandingTotal={data.outstandingTotal}
+          ytdNetProfit={data.ytdNetProfit}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
