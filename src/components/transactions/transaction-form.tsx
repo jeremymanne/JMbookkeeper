@@ -77,7 +77,7 @@ export function TransactionForm({ categories, vendors: initialVendors, clients, 
         ? new Date(transaction.date)
         : new Date(),
       description: transaction?.description ?? "",
-      categoryId: transaction?.categoryId ?? null,
+      categoryId: transaction?.categoryId ?? "",
       vendorId: transaction?.vendorId ?? null,
       vendor: transaction?.vendor ?? "",
       source: transaction?.source ?? "",
@@ -183,7 +183,7 @@ export function TransactionForm({ categories, vendors: initialVendors, clients, 
               <Label>Category</Label>
               <Select
                 value={form.watch("categoryId") ?? undefined}
-                onValueChange={(val) => form.setValue("categoryId", val || null)}
+                onValueChange={(val) => form.setValue("categoryId", val || "")}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />

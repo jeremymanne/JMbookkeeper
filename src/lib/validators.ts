@@ -32,7 +32,7 @@ export const transactionSchema = z.object({
   amount: z.number().positive("Amount must be positive"),
   date: z.date(),
   description: z.string().min(1, "Description is required").max(500),
-  categoryId: z.string().min(1, "Category is required").nullable(),
+  categoryId: z.string().min(1, "Category is required"),
   vendorId: z.string().nullable().optional(),
   vendor: z.string().max(200).optional().or(z.literal("")),
   source: z.string().max(200).optional().or(z.literal("")),
