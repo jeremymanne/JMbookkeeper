@@ -1,9 +1,11 @@
 "use client";
 
 import { useTransition, useState } from "react";
+import { format } from "date-fns";
 import { markInvoicePaid, markInvoiceUnpaid } from "@/app/invoices/actions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -27,11 +29,16 @@ export function InvoiceStatusActions({
 }: InvoiceStatusActionsProps) {
   const [isPending, startTransition] = useTransition();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [paidDate, setPaidDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [paymentNote, setPaymentNote] = useState("");
 
   function handleMarkPaid() {
     startTransition(async () => {
-      const result = await markInvoicePaid(invoiceId, paymentNote || undefined);
+      const result = await markInvoicePaid(
+        invoiceId,
+        paymentNote || undefined,
+        paidDate
+      );
       if (result.success) {
         toast.success("Marked as paid");
         setDialogOpen(false);
@@ -67,7 +74,10 @@ export function InvoiceStatusActions({
       <Button
         variant="default"
         size="sm"
-        onClick={() => setDialogOpen(true)}
+        onClick={() => {
+          setPaidDate(format(new Date(), "yyyy-MM-dd"));
+          setDialogOpen(true);
+        }}
         disabled={isPending}
         className="bg-green-600 hover:bg-green-700"
       >
@@ -80,18 +90,29 @@ export function InvoiceStatusActions({
           <DialogHeader>
             <DialogTitle>Mark Invoice as Paid</DialogTitle>
             <DialogDescription>
-              Optionally add a note about the payment (e.g., &quot;Paid via check #1234 on 3/1&quot;).
+              Enter the date payment was received and any notes about the payment.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="paymentNote">Payment Note (optional)</Label>
-            <Textarea
-              id="paymentNote"
-              placeholder="e.g., Paid via check #1234 on 3/1"
-              rows={3}
-              value={paymentNote}
-              onChange={(e) => setPaymentNote(e.target.value)}
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="paidDate">Date Paid</Label>
+              <Input
+                id="paidDate"
+                type="date"
+                value={paidDate}
+                onChange={(e) => setPaidDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="paymentNote">Payment Note (optional)</Label>
+              <Textarea
+                id="paymentNote"
+                placeholder="e.g., Client paid invoices #1001 and #1002 together via wire transfer"
+                rows={3}
+                value={paymentNote}
+                onChange={(e) => setPaymentNote(e.target.value)}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>

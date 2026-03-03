@@ -29,6 +29,7 @@ interface Invoice {
   invoiceNumber: string;
   status: string;
   issueDate: Date | string;
+  paidDate: Date | string | null;
   clientName: string;
   total: number;
 }
@@ -82,6 +83,7 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
           <TableHead>Invoice #</TableHead>
           <TableHead>Client</TableHead>
           <TableHead>Date Sent</TableHead>
+          <TableHead>Date Paid</TableHead>
           <TableHead className="text-right">Amount</TableHead>
           <TableHead className="text-center">Status</TableHead>
           <TableHead className="w-[50px]" />
@@ -100,6 +102,9 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
             </TableCell>
             <TableCell>{inv.clientName}</TableCell>
             <TableCell>{formatDate(inv.issueDate)}</TableCell>
+            <TableCell>
+              {inv.paidDate ? formatDate(inv.paidDate) : "—"}
+            </TableCell>
             <TableCell className="text-right font-medium">
               {formatCurrency(inv.total)}
             </TableCell>

@@ -48,6 +48,20 @@ export default async function InvoiceViewPage({ params }: Props) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              {invoice.paidDate && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                    Date Paid
+                  </p>
+                  <p className="text-sm">
+                    {new Date(invoice.paidDate).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+              )}
               {invoice.transactions.length > 0 && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">

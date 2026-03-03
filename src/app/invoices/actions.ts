@@ -149,6 +149,31 @@ export async function createInvoice(data: InvoiceFormData) {
       },
     });
 
+    // If created as paid, auto-create income transaction
+    if (d.status === "paid") {
+      let incomeCategory = await prisma.category.findFirst({
+        where: { type: "income", isActive: true, name: "Client Services" },
+        select: { id: true },
+      });
+      if (!incomeCategory) {
+        incomeCategory = await prisma.category.findFirst({
+          where: { type: "income", isActive: true },
+          select: { id: true },
+        });
+      }
+
+      await prisma.transaction.create({
+        data: {
+          type: "income",
+          amount: total,
+          date: new Date(),
+          description: `Payment: ${d.invoiceNumber} — ${clientName}`,
+          invoiceId: invoice.id,
+          categoryId: incomeCategory?.id ?? null,
+        },
+      });
+    }
+
     // Increment next invoice number
     const currentNum =
       (
@@ -164,6 +189,8 @@ export async function createInvoice(data: InvoiceFormData) {
     });
 
     revalidatePath("/invoices");
+    revalidatePath("/transactions");
+    revalidatePath("/");
     return { success: true as const, data: invoice };
   } catch (e) {
     console.error("Invoice creation error:", e);
@@ -205,6 +232,12 @@ export async function updateInvoice(id: string, data: InvoiceFormData) {
 
     await prisma.invoiceItem.deleteMany({ where: { invoiceId: id } });
 
+    // Check previous status to handle income transaction
+    const previous = await prisma.invoice.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+
     const invoice = await prisma.invoice.update({
       where: { id },
       data: {
@@ -231,8 +264,40 @@ export async function updateInvoice(id: string, data: InvoiceFormData) {
       },
     });
 
+    // Handle status transitions for income transactions
+    if (previous?.status !== "paid" && d.status === "paid") {
+      // Became paid: create income transaction
+      let incomeCategory = await prisma.category.findFirst({
+        where: { type: "income", isActive: true, name: "Client Services" },
+        select: { id: true },
+      });
+      if (!incomeCategory) {
+        incomeCategory = await prisma.category.findFirst({
+          where: { type: "income", isActive: true },
+          select: { id: true },
+        });
+      }
+      await prisma.transaction.create({
+        data: {
+          type: "income",
+          amount: total,
+          date: new Date(),
+          description: `Payment: ${d.invoiceNumber} — ${clientName}`,
+          invoiceId: id,
+          categoryId: incomeCategory?.id ?? null,
+        },
+      });
+    } else if (previous?.status === "paid" && d.status !== "paid") {
+      // Was paid, now unpaid: remove income transaction
+      await prisma.transaction.deleteMany({
+        where: { invoiceId: id, type: "income" },
+      });
+    }
+
     revalidatePath("/invoices");
     revalidatePath(`/invoices/${id}`);
+    revalidatePath("/transactions");
+    revalidatePath("/");
     return { success: true as const, data: invoice };
   } catch (e) {
     return { success: false as const, error: "Failed to update invoice" };
@@ -249,14 +314,59 @@ export async function deleteInvoice(id: string) {
   }
 }
 
-export async function markInvoicePaid(id: string, paymentNote?: string) {
+export async function markInvoicePaid(
+  id: string,
+  paymentNote?: string,
+  paidDateStr?: string
+) {
   try {
-    await prisma.invoice.update({
+    const invoice = await prisma.invoice.findUnique({
       where: { id },
-      data: { status: "paid", paymentNote: paymentNote || null },
+      select: { invoiceNumber: true, clientName: true, total: true },
     });
+    if (!invoice) {
+      return { success: false as const, error: "Invoice not found" };
+    }
+
+    const paidDate = paidDateStr ? new Date(paidDateStr) : new Date();
+
+    // Find an income category to assign (prefer "Client Services" or first available)
+    let incomeCategory = await prisma.category.findFirst({
+      where: { type: "income", isActive: true, name: "Client Services" },
+      select: { id: true },
+    });
+    if (!incomeCategory) {
+      incomeCategory = await prisma.category.findFirst({
+        where: { type: "income", isActive: true },
+        select: { id: true },
+      });
+    }
+
+    await prisma.$transaction([
+      prisma.invoice.update({
+        where: { id },
+        data: {
+          status: "paid",
+          paymentNote: paymentNote || null,
+          paidDate,
+        },
+      }),
+      prisma.transaction.create({
+        data: {
+          type: "income",
+          amount: invoice.total,
+          date: paidDate,
+          description: `Payment: ${invoice.invoiceNumber} — ${invoice.clientName}`,
+          invoiceId: id,
+          categoryId: incomeCategory?.id ?? null,
+        },
+      }),
+    ]);
+
     revalidatePath("/invoices");
     revalidatePath(`/invoices/${id}`);
+    revalidatePath("/transactions");
+    revalidatePath("/");
     return { success: true as const };
   } catch (e) {
     return { success: false as const, error: "Failed to mark as paid" };
@@ -266,18 +376,19 @@ export async function markInvoicePaid(id: string, paymentNote?: string) {
 export async function markInvoiceUnpaid(id: string) {
   try {
     await prisma.$transaction([
-      prisma.transaction.updateMany({
-        where: { invoiceId: id },
-        data: { invoiceId: null },
+      // Delete auto-created income transactions linked to this invoice
+      prisma.transaction.deleteMany({
+        where: { invoiceId: id, type: "income" },
       }),
       prisma.invoice.update({
         where: { id },
-        data: { status: "unpaid", paymentNote: null },
+        data: { status: "unpaid", paymentNote: null, paidDate: null },
       }),
     ]);
     revalidatePath("/invoices");
     revalidatePath(`/invoices/${id}`);
     revalidatePath("/transactions");
+    revalidatePath("/");
     return { success: true as const };
   } catch (e) {
     return { success: false as const, error: "Failed to mark as unpaid" };
