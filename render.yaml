@@ -1,0 +1,20 @@
+databases:
+  - name: bookkeeper-db
+    plan: free
+    databaseName: bookkeeper
+    user: bookkeeper
+
+services:
+  - type: web
+    name: bookkeeper
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bookkeeper-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production

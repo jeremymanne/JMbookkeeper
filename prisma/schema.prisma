@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────
+// Phase 1: Core Bookkeeping
+// ─────────────────────────────────────
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  type      String // "income" | "expense"
+  color     String   @default("#6B7280")
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions Transaction[]
+}
+
+model Vendor {
+  id        String   @id @default(uuid())
+  name      String
+  company   String?
+  email     String?
+  phone     String?
+  address   String?
+  city      String?
+  state     String?
+  zip       String?
+  taxId     String?
+  isActive  Boolean  @default(true)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions Transaction[]
+  invoices     Invoice[]
+}
+
+model Transaction {
+  id              String   @id @default(uuid())
+  type            String // "income" | "expense"
+  amount          Float
+  date            DateTime
+  description     String
+  vendor          String?
+  source          String?
+  paymentMethod   String?
+  referenceNumber String?
+  notes           String?
+  isRecurring     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  vendorId String?
+  vendorRef Vendor? @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+
+  invoiceId String?
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@index([date])
+  @@index([type])
+  @@index([categoryId])
+  @@index([vendorId])
+  @@index([invoiceId])
+}
+
+// ─────────────────────────────────────
+// Phase 2: Invoicing & Clients
+// ─────────────────────────────────────
+
+model Client {
+  id          String   @id @default(uuid())
+  name        String
+  contactName String?
+  email       String?
+  phone       String?
+  address     String?
+  city        String?
+  state       String?
+  zip         String?
+  isActive    Boolean  @default(true)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  invoices Invoice[]
+}
+
+model Invoice {
+  id            String   @id @default(uuid())
+  invoiceNumber String   @unique
+  status        String   @default("unpaid") // unpaid, paid
+  issueDate     DateTime
+  dueDate       DateTime?
+
+  clientName    String
+  clientEmail   String?
+  clientAddress String?
+
+  subtotal     Float @default(0)
+  taxRate      Float @default(0)
+  taxAmount    Float @default(0)
+  total        Float @default(0)
+
+  notes        String?
+  paymentTerms String?
+  paymentNote  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items        InvoiceItem[]
+  transactions Transaction[]
+
+  clientId  String?
+  clientRef Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  vendorId  String?
+  vendorRef Vendor?       @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([issueDate])
+  @@index([clientId])
+  @@index([vendorId])
+}
+
+model InvoiceItem {
+  id          String @id @default(uuid())
+  description String
+  quantity    Float  @default(1)
+  unitPrice   Float
+  amount      Float
+
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+// ─────────────────────────────────────
+// Settings (key-value store)
+// ─────────────────────────────────────
+
+model Setting {
+  key       String   @id
+  value     String?
+  updatedAt DateTime @updatedAt
+}
