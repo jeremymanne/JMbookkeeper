@@ -2,11 +2,13 @@ import { Header } from "@/components/layout/header";
 import { TransactionForm } from "@/components/transactions/transaction-form";
 import { getCategories } from "@/app/categories/actions";
 import { getVendors } from "@/app/vendors/actions";
+import { getClients } from "@/app/clients/actions";
 
 export default async function NewTransactionPage() {
-  const [categories, vendors] = await Promise.all([
+  const [categories, vendors, clients] = await Promise.all([
     getCategories(),
     getVendors(true),
+    getClients(true),
   ]);
   const activeCategories = categories.filter((c) => c.isActive);
 
@@ -17,6 +19,7 @@ export default async function NewTransactionPage() {
         <TransactionForm
           categories={activeCategories}
           vendors={vendors}
+          clients={clients}
         />
       </div>
     </>

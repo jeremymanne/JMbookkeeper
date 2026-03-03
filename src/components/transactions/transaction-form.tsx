@@ -34,9 +34,15 @@ interface Vendor {
   name: string;
 }
 
+interface Client {
+  id: string;
+  name: string;
+}
+
 interface TransactionFormProps {
   categories: Category[];
   vendors: Vendor[];
+  clients: Client[];
   transaction?: {
     id: string;
     type: string;
@@ -52,10 +58,11 @@ interface TransactionFormProps {
     isRecurring: boolean;
     categoryId: string | null;
     invoiceId: string | null;
+    clientId: string | null;
   };
 }
 
-export function TransactionForm({ categories, vendors: initialVendors, transaction }: TransactionFormProps) {
+export function TransactionForm({ categories, vendors: initialVendors, clients, transaction }: TransactionFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [vendors, setVendors] = useState(initialVendors);
@@ -79,6 +86,7 @@ export function TransactionForm({ categories, vendors: initialVendors, transacti
       notes: transaction?.notes ?? "",
       isRecurring: transaction?.isRecurring ?? false,
       invoiceId: transaction?.invoiceId ?? null,
+      clientId: transaction?.clientId ?? null,
     },
   });
 
@@ -235,6 +243,29 @@ export function TransactionForm({ categories, vendors: initialVendors, transacti
                 />
               </div>
             </div>
+          </div>
+
+          {/* Client (optional) */}
+          <div className="space-y-2">
+            <Label>Client (optional)</Label>
+            <Select
+              value={form.watch("clientId") ?? "none"}
+              onValueChange={(val) =>
+                form.setValue("clientId", val === "none" ? null : val)
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="No client — operating expense" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No client — operating expense</SelectItem>
+                {clients.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

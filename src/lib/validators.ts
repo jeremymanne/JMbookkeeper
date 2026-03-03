@@ -41,6 +41,7 @@ export const transactionSchema = z.object({
   notes: z.string().optional().or(z.literal("")),
   isRecurring: z.boolean(),
   invoiceId: z.string().nullable().optional(),
+  clientId: z.string().nullable().optional(),
 });
 
 export type TransactionFormData = z.infer<typeof transactionSchema>;
