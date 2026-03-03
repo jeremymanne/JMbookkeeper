@@ -4,7 +4,14 @@ import { getClients } from "@/app/clients/actions";
 import { getNextInvoiceNumber } from "@/app/invoices/actions";
 import { getSettings } from "@/app/settings/actions";
 
-export default async function NewInvoicePage() {
+export const dynamic = "force-dynamic";
+
+interface Props {
+  searchParams: Promise<{ clientId?: string }>;
+}
+
+export default async function NewInvoicePage({ searchParams }: Props) {
+  const { clientId } = await searchParams;
   const [clients, nextInvoiceNumber, settings] = await Promise.all([
     getClients(true),
     getNextInvoiceNumber(),
@@ -19,6 +26,7 @@ export default async function NewInvoicePage() {
           clients={clients}
           nextInvoiceNumber={nextInvoiceNumber}
           defaultTaxRate={settings.default_tax_rate ?? "0"}
+          preselectedClientId={clientId}
         />
       </div>
     </>

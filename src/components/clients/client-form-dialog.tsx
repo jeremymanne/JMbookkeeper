@@ -32,6 +32,7 @@ interface ClientFormDialogProps {
     zip: string | null;
     isActive: boolean;
     notes: string | null;
+    monthlyRetainer: number | null;
   };
   trigger?: React.ReactNode;
   onCreated?: (client: { id: string; name: string }) => void;
@@ -55,6 +56,7 @@ export function ClientFormDialog({ client, trigger, onCreated }: ClientFormDialo
       zip: client?.zip ?? "",
       isActive: client?.isActive ?? true,
       notes: client?.notes ?? "",
+      monthlyRetainer: client?.monthlyRetainer ?? 0,
     },
   });
 
@@ -187,6 +189,23 @@ export function ClientFormDialog({ client, trigger, onCreated }: ClientFormDialo
               placeholder="Additional notes (optional)"
               rows={2}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="client-retainer">Monthly Retainer ($)</Label>
+            <Input
+              id="client-retainer"
+              type="number"
+              min="0"
+              step="0.01"
+              {...form.register("monthlyRetainer", { valueAsNumber: true })}
+              placeholder="0.00"
+            />
+            {form.formState.errors.monthlyRetainer && (
+              <p className="text-sm text-red-500">
+                {form.formState.errors.monthlyRetainer.message}
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

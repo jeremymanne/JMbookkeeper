@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/header";
 import { CategoryTable } from "@/components/categories/category-table";
 import { CategoryFormDialog } from "@/components/categories/category-form-dialog";
+import { SeedDefaultsButton } from "@/components/categories/seed-defaults-button";
 import { getCategories } from "./actions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +14,10 @@ export default async function CategoriesPage() {
   return (
     <>
       <Header title="Categories">
-        <CategoryFormDialog />
+        <div className="flex gap-2">
+          <SeedDefaultsButton />
+          <CategoryFormDialog />
+        </div>
       </Header>
       <div className="p-6">
         <Tabs defaultValue="all">

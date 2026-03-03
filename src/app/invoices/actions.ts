@@ -110,6 +110,16 @@ export async function createInvoice(data: InvoiceFormData) {
   try {
     const d = parsed.data;
 
+    // Resolve client name: use provided name, or look up from client record
+    let clientName = d.clientName || "";
+    if (!clientName && d.clientId) {
+      const client = await prisma.client.findUnique({
+        where: { id: d.clientId },
+        select: { name: true },
+      });
+      clientName = client?.name || "";
+    }
+
     const subtotal = d.items.reduce((sum, item) => sum + item.amount, 0);
     const taxAmount = subtotal * (d.taxRate / 100);
     const total = subtotal + taxAmount;
@@ -120,7 +130,7 @@ export async function createInvoice(data: InvoiceFormData) {
         status: d.status,
         issueDate: d.issueDate,
         clientId: d.clientId || null,
-        clientName: d.clientName,
+        clientName,
         clientEmail: d.clientEmail || null,
         clientAddress: d.clientAddress || null,
         notes: d.notes || null,
@@ -180,6 +190,15 @@ export async function updateInvoice(id: string, data: InvoiceFormData) {
   try {
     const d = parsed.data;
 
+    let clientName = d.clientName || "";
+    if (!clientName && d.clientId) {
+      const client = await prisma.client.findUnique({
+        where: { id: d.clientId },
+        select: { name: true },
+      });
+      clientName = client?.name || "";
+    }
+
     const subtotal = d.items.reduce((sum, item) => sum + item.amount, 0);
     const taxAmount = subtotal * (d.taxRate / 100);
     const total = subtotal + taxAmount;
@@ -193,7 +212,7 @@ export async function updateInvoice(id: string, data: InvoiceFormData) {
         status: d.status,
         issueDate: d.issueDate,
         clientId: d.clientId || null,
-        clientName: d.clientName,
+        clientName,
         clientEmail: d.clientEmail || null,
         clientAddress: d.clientAddress || null,
         notes: d.notes || null,

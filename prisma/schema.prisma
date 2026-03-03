@@ -89,10 +89,11 @@ model Client {
   city        String?
   state       String?
   zip         String?
-  isActive    Boolean  @default(true)
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive        Boolean  @default(true)
+  notes           String?
+  monthlyRetainer Float?   @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   invoices Invoice[]
 }

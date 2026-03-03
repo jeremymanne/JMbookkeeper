@@ -8,6 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,9 +21,10 @@ interface MonthlyData {
 
 interface IncomeExpenseChartProps {
   data: MonthlyData[];
+  avgMonthlyExpenses?: number;
 }
 
-export function IncomeExpenseChart({ data }: IncomeExpenseChartProps) {
+export function IncomeExpenseChart({ data, avgMonthlyExpenses }: IncomeExpenseChartProps) {
   return (
     <Card>
       <CardHeader>
@@ -46,6 +48,19 @@ export function IncomeExpenseChart({ data }: IncomeExpenseChartProps) {
             <Legend />
             <Bar dataKey="income" fill="#22c55e" name="Income" radius={[4, 4, 0, 0]} />
             <Bar dataKey="expenses" fill="#ef4444" name="Expenses" radius={[4, 4, 0, 0]} />
+            {avgMonthlyExpenses != null && avgMonthlyExpenses > 0 && (
+              <ReferenceLine
+                y={avgMonthlyExpenses}
+                stroke="#f97316"
+                strokeDasharray="6 3"
+                label={{
+                  value: `Avg: $${avgMonthlyExpenses.toLocaleString("en-US", { minimumFractionDigits: 0 })}`,
+                  position: "right",
+                  fill: "#f97316",
+                  fontSize: 12,
+                }}
+              />
+            )}
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

@@ -34,17 +34,9 @@ interface Vendor {
   name: string;
 }
 
-interface UnpaidInvoice {
-  id: string;
-  invoiceNumber: string;
-  clientName: string;
-  total: number;
-}
-
 interface TransactionFormProps {
   categories: Category[];
   vendors: Vendor[];
-  unpaidInvoices?: UnpaidInvoice[];
   transaction?: {
     id: string;
     type: string;
@@ -63,7 +55,7 @@ interface TransactionFormProps {
   };
 }
 
-export function TransactionForm({ categories, vendors: initialVendors, unpaidInvoices = [], transaction }: TransactionFormProps) {
+export function TransactionForm({ categories, vendors: initialVendors, transaction }: TransactionFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [vendors, setVendors] = useState(initialVendors);
@@ -90,10 +82,7 @@ export function TransactionForm({ categories, vendors: initialVendors, unpaidInv
     },
   });
 
-  const watchType = form.watch("type");
-  const filteredCategories = categories.filter(
-    (c) => c.type === watchType
-  );
+  const expenseCategories = categories.filter((c) => c.type === "expense");
 
   function onSubmit(data: TransactionFormData) {
     startTransition(async () => {
@@ -111,7 +100,7 @@ export function TransactionForm({ categories, vendors: initialVendors, unpaidInv
 
       if (result.success) {
         toast.success(
-          isEditing ? "Transaction updated" : "Transaction created"
+          isEditing ? "Transaction updated" : "Expense logged"
         );
         router.push("/transactions");
       } else {
@@ -130,36 +119,6 @@ export function TransactionForm({ categories, vendors: initialVendors, unpaidInv
     <Card>
       <CardContent className="pt-6">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Type Toggle */}
-          <div className="space-y-2">
-            <Label>Type</Label>
-            <div className="flex gap-2">
-              {(["expense", "income"] as const).map((t) => (
-                <Button
-                  key={t}
-                  type="button"
-                  variant={watchType === t ? "default" : "outline"}
-                  className={
-                    watchType === t
-                      ? t === "income"
-                        ? "bg-green-600 hover:bg-green-700"
-                        : "bg-red-600 hover:bg-red-700"
-                      : ""
-                  }
-                  onClick={() => {
-                    form.setValue("type", t);
-                    form.setValue("categoryId", null);
-                    if (t === "expense") {
-                      form.setValue("invoiceId", null);
-                    }
-                  }}
-                >
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
-                </Button>
-              ))}
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Amount */}
             <div className="space-y-2">
@@ -222,7 +181,7 @@ export function TransactionForm({ categories, vendors: initialVendors, unpaidInv
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredCategories.map((cat) => (
+                  {expenseCategories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       <div className="flex items-center gap-2">
                         <div
@@ -237,86 +196,46 @@ export function TransactionForm({ categories, vendors: initialVendors, unpaidInv
               </Select>
             </div>
 
-            {/* Vendor (dropdown) / Source (text) */}
-            {watchType === "expense" ? (
-              <div className="space-y-2">
-                <Label>Vendor</Label>
-                <div className="flex gap-2">
-                  <Select
-                    value={form.watch("vendorId") ?? "none"}
-                    onValueChange={(val) => {
-                      const vendorId = val === "none" ? null : val;
-                      form.setValue("vendorId", vendorId);
-                      if (vendorId) {
-                        const v = vendors.find((v) => v.id === vendorId);
-                        if (v) form.setValue("vendor", v.name);
-                      } else {
-                        form.setValue("vendor", "");
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select vendor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No vendor</SelectItem>
-                      {vendors.map((v) => (
-                        <SelectItem key={v.id} value={v.id}>
-                          {v.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <VendorFormDialog
-                    onCreated={handleVendorCreated}
-                    trigger={
-                      <Button type="button" variant="outline" size="icon" title="New Vendor">
-                        <Plus className="h-4 w-4" />
-                      </Button>
+            {/* Vendor */}
+            <div className="space-y-2">
+              <Label>Vendor</Label>
+              <div className="flex gap-2">
+                <Select
+                  value={form.watch("vendorId") ?? "none"}
+                  onValueChange={(val) => {
+                    const vendorId = val === "none" ? null : val;
+                    form.setValue("vendorId", vendorId);
+                    if (vendorId) {
+                      const v = vendors.find((v) => v.id === vendorId);
+                      if (v) form.setValue("vendor", v.name);
+                    } else {
+                      form.setValue("vendor", "");
                     }
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label htmlFor="source">Source</Label>
-                <Input
-                  id="source"
-                  placeholder="Who paid you?"
-                  {...form.register("source")}
+                  }}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select vendor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No vendor</SelectItem>
+                    {vendors.map((v) => (
+                      <SelectItem key={v.id} value={v.id}>
+                        {v.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <VendorFormDialog
+                  onCreated={handleVendorCreated}
+                  trigger={
+                    <Button type="button" variant="outline" size="icon" title="New Vendor">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  }
                 />
               </div>
-            )}
-          </div>
-
-          {/* Link to Invoice (income only) */}
-          {watchType === "income" && unpaidInvoices.length > 0 && (
-            <div className="space-y-2">
-              <Label>Link to Invoice</Label>
-              <Select
-                value={form.watch("invoiceId") ?? "none"}
-                onValueChange={(val) =>
-                  form.setValue("invoiceId", val === "none" ? null : val)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select invoice (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No invoice</SelectItem>
-                  {unpaidInvoices.map((inv) => (
-                    <SelectItem key={inv.id} value={inv.id}>
-                      {inv.invoiceNumber} — {inv.clientName} ($
-                      {inv.total.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                      })}
-                      )
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
-          )}
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Payment Method */}
@@ -377,7 +296,7 @@ export function TransactionForm({ categories, vendors: initialVendors, unpaidInv
                 ? "Saving..."
                 : isEditing
                   ? "Save Changes"
-                  : "Create Transaction"}
+                  : "Log Expense"}
             </Button>
           </div>
         </form>

@@ -6,7 +6,6 @@ import {
   Cell,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -18,14 +17,17 @@ interface ExpenseCategory {
 
 interface ExpenseBreakdownChartProps {
   data: ExpenseCategory[];
+  periodLabel?: string;
 }
 
-export function ExpenseBreakdownChart({ data }: ExpenseBreakdownChartProps) {
+export function ExpenseBreakdownChart({ data, periodLabel }: ExpenseBreakdownChartProps) {
+  const title = `Expense Breakdown (${periodLabel ?? "YTD"})`;
+
   if (data.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Expense Breakdown (YTD)</CardTitle>
+          <CardTitle className="text-base">{title}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-[300px] text-muted-foreground">
@@ -39,7 +41,7 @@ export function ExpenseBreakdownChart({ data }: ExpenseBreakdownChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Expense Breakdown (YTD)</CardTitle>
+        <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>

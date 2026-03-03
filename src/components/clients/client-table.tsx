@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import Link from "next/link";
 import { toggleClientActive, deleteClient } from "@/app/clients/actions";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,7 +15,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ClientFormDialog } from "./client-form-dialog";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, FileText, DollarSign } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 interface ClientWithCount {
   id: string;
@@ -28,7 +30,9 @@ interface ClientWithCount {
   zip: string | null;
   isActive: boolean;
   notes: string | null;
+  monthlyRetainer: number | null;
   _count: { invoices: number };
+  outstandingInvoices: { count: number; total: number };
 }
 
 interface ClientTableProps {
@@ -74,8 +78,8 @@ export function ClientTable({ clients }: ClientTableProps) {
           <TableHead>Client Name</TableHead>
           <TableHead>Contact</TableHead>
           <TableHead>Email</TableHead>
-          <TableHead>Location</TableHead>
-          <TableHead className="text-center">Invoices</TableHead>
+          <TableHead className="text-right">Outstanding</TableHead>
+          <TableHead className="text-right">Retainer</TableHead>
           <TableHead className="text-center">Active</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
@@ -93,11 +97,24 @@ export function ClientTable({ clients }: ClientTableProps) {
                 )}
               </div>
             </TableCell>
-            <TableCell>
-              {[client.city, client.state].filter(Boolean).join(", ") || "—"}
+            <TableCell className="text-right">
+              {client.outstandingInvoices.count > 0 ? (
+                <div>
+                  <div className="font-medium text-orange-600">
+                    {formatCurrency(client.outstandingInvoices.total)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {client.outstandingInvoices.count} unpaid
+                  </div>
+                </div>
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              )}
             </TableCell>
-            <TableCell className="text-center">
-              {client._count.invoices}
+            <TableCell className="text-right">
+              {client.monthlyRetainer && client.monthlyRetainer > 0
+                ? formatCurrency(client.monthlyRetainer)
+                : "—"}
             </TableCell>
             <TableCell className="text-center">
               <Checkbox
@@ -110,6 +127,11 @@ export function ClientTable({ clients }: ClientTableProps) {
             </TableCell>
             <TableCell className="text-right">
               <div className="flex items-center justify-end gap-1">
+                <Button variant="ghost" size="icon" asChild title="Generate Invoice">
+                  <Link href={`/invoices/new?clientId=${client.id}`}>
+                    <FileText className="h-4 w-4" />
+                  </Link>
+                </Button>
                 <ClientFormDialog
                   client={client}
                   trigger={

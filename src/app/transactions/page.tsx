@@ -35,7 +35,7 @@ export default async function TransactionsPage({ searchParams }: Props) {
         <Button asChild>
           <Link href="/transactions/new">
             <Plus className="h-4 w-4 mr-2" />
-            New Transaction
+            Log Expense
           </Link>
         </Button>
       </Header>

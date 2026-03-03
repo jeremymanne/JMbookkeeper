@@ -72,6 +72,7 @@ export const clientSchema = z.object({
   zip: z.string().max(20).optional().or(z.literal("")),
   isActive: z.boolean(),
   notes: z.string().optional().or(z.literal("")),
+  monthlyRetainer: z.number().min(0),
 });
 
 export type ClientFormData = z.infer<typeof clientSchema>;
@@ -94,7 +95,7 @@ export const invoiceSchema = z.object({
   status: z.enum(INVOICE_STATUSES),
   issueDate: z.date(),
   clientId: z.string().nullable().optional(),
-  clientName: z.string().min(1, "Client name is required").max(200),
+  clientName: z.string().max(200).optional().or(z.literal("")),
   clientEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   clientAddress: z.string().max(500).optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),

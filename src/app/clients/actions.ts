@@ -6,13 +6,33 @@ import { revalidatePath } from "next/cache";
 
 export async function getClients(activeOnly?: boolean) {
   const where = activeOnly ? { isActive: true } : {};
-  return prisma.client.findMany({
+  const clients = await prisma.client.findMany({
     where,
     orderBy: [{ name: "asc" }],
     include: {
       _count: { select: { invoices: true } },
     },
   });
+
+  // Get outstanding invoices grouped by clientId in a single query
+  const unpaidInvoices = await prisma.invoice.groupBy({
+    by: ["clientId"],
+    where: { status: "unpaid", clientId: { not: null } },
+    _count: true,
+    _sum: { total: true },
+  });
+
+  const unpaidMap = new Map(
+    unpaidInvoices.map((inv) => [
+      inv.clientId,
+      { count: inv._count, total: inv._sum.total ?? 0 },
+    ])
+  );
+
+  return clients.map((client) => ({
+    ...client,
+    outstandingInvoices: unpaidMap.get(client.id) ?? { count: 0, total: 0 },
+  }));
 }
 
 export async function getClient(id: string) {

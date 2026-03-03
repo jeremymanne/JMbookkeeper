@@ -39,6 +39,7 @@ interface InvoiceFormProps {
   clients: Client[];
   nextInvoiceNumber: string;
   defaultTaxRate: string;
+  preselectedClientId?: string;
   invoice?: {
     id: string;
     invoiceNumber: string;
@@ -64,12 +65,18 @@ export function InvoiceForm({
   clients: initialClients,
   nextInvoiceNumber,
   defaultTaxRate,
+  preselectedClientId,
   invoice,
 }: InvoiceFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [clients, setClients] = useState(initialClients);
   const isEditing = !!invoice;
+
+  // Pre-fill client fields if a clientId was passed via URL
+  const preselectedClient = preselectedClientId
+    ? initialClients.find((c) => c.id === preselectedClientId)
+    : null;
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
@@ -79,10 +86,12 @@ export function InvoiceForm({
       issueDate: invoice?.issueDate
         ? new Date(invoice.issueDate)
         : new Date(),
-      clientId: invoice?.clientId ?? null,
-      clientName: invoice?.clientName ?? "",
-      clientEmail: invoice?.clientEmail ?? "",
-      clientAddress: invoice?.clientAddress ?? "",
+      clientId: invoice?.clientId ?? preselectedClient?.id ?? null,
+      clientName: invoice?.clientName ?? preselectedClient?.name ?? "",
+      clientEmail: invoice?.clientEmail ?? preselectedClient?.email ?? "",
+      clientAddress: invoice?.clientAddress ?? (preselectedClient
+        ? [preselectedClient.address, preselectedClient.city, preselectedClient.state, preselectedClient.zip].filter(Boolean).join(", ")
+        : ""),
       notes: invoice?.notes ?? "",
       taxRate: invoice?.taxRate ?? (parseFloat(defaultTaxRate) || 0),
       items: invoice?.items?.map((item) => ({
@@ -247,14 +256,9 @@ export function InvoiceForm({
             <Label htmlFor="clientName">Client Name</Label>
             <Input
               id="clientName"
-              placeholder="Client or company name"
+              placeholder="Auto-filled from client, or enter manually"
               {...form.register("clientName")}
             />
-            {form.formState.errors.clientName && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.clientName.message}
-              </p>
-            )}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
