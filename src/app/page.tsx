@@ -7,6 +7,7 @@ import { ExpenseBreakdownChart } from "@/components/dashboard/expense-breakdown-
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { DashboardTimeFilter } from "@/components/dashboard/dashboard-time-filter";
 import { RetainerSummary } from "@/components/dashboard/retainer-summary";
+import { YtdNetProfit } from "@/components/dashboard/ytd-net-profit";
 import { getDashboardData, type TimeFrame } from "./dashboard-actions";
 import { Button } from "@/components/ui/button";
 
@@ -36,13 +37,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </Button>
       </Header>
       <div className="p-6 space-y-6">
-        <Suspense fallback={null}>
-          <DashboardTimeFilter
-            currentTimeFrame={timeFrame}
-            currentFrom={from}
-            currentTo={to}
-          />
-        </Suspense>
+        <div className="flex items-center justify-between gap-4">
+          <Suspense fallback={null}>
+            <DashboardTimeFilter
+              currentTimeFrame={timeFrame}
+              currentFrom={from}
+              currentTo={to}
+            />
+          </Suspense>
+          <YtdNetProfit value={data.ytdNetProfit} />
+        </div>
 
         <SummaryCards
           periodLabel={data.periodLabel}
@@ -52,7 +56,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           totalMonthlyRetainer={data.totalMonthlyRetainer}
           outstandingCount={data.outstandingCount}
           outstandingTotal={data.outstandingTotal}
-          ytdNetProfit={data.ytdNetProfit}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
