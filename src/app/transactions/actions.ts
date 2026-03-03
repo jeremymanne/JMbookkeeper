@@ -102,6 +102,7 @@ export async function createTransaction(data: TransactionFormData) {
         notes: d.notes || null,
         isRecurring: d.isRecurring,
         invoiceId,
+        clientId: d.clientId || null,
       },
     });
 
@@ -154,6 +155,7 @@ export async function updateTransaction(id: string, data: TransactionFormData) {
         notes: d.notes || null,
         isRecurring: d.isRecurring,
         invoiceId: newInvoiceId,
+        clientId: d.clientId || null,
       },
     });
 
