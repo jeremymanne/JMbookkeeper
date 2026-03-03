@@ -3,7 +3,10 @@
 import { prisma } from "@/lib/prisma";
 
 export async function getClientDashboard(clientId: string) {
-  const [client, invoices, transactions, invoiceAggregates, expenseAggregate] =
+  const ytdStart = new Date(2026, 0, 1);
+  const ytdEnd = new Date();
+
+  const [client, invoices, transactions, invoiceAggregates, expenseAggregate, incomeAggregate] =
     await Promise.all([
       prisma.client.findUnique({
         where: { id: clientId },
@@ -20,19 +23,34 @@ export async function getClientDashboard(clientId: string) {
       }),
       prisma.invoice.groupBy({
         by: ["status"],
-        where: { clientId },
+        where: {
+          clientId,
+          issueDate: { gte: ytdStart, lte: ytdEnd },
+        },
         _sum: { total: true },
         _count: true,
       }),
       prisma.transaction.aggregate({
-        where: { clientId, type: "expense" },
+        where: {
+          clientId,
+          type: "expense",
+          date: { gte: ytdStart, lte: ytdEnd },
+        },
+        _sum: { amount: true },
+      }),
+      prisma.transaction.aggregate({
+        where: {
+          clientId,
+          type: "income",
+          date: { gte: ytdStart, lte: ytdEnd },
+        },
         _sum: { amount: true },
       }),
     ]);
 
   if (!client) return null;
 
-  // Compute summary stats from aggregates
+  // Compute YTD summary stats from aggregates
   const statusMap = new Map(
     invoiceAggregates.map((a) => [
       a.status,
@@ -48,6 +66,8 @@ export async function getClientDashboard(clientId: string) {
   const outstanding = statusMap.get("unpaid")?.total ?? 0;
   const unpaidCount = statusMap.get("unpaid")?.count ?? 0;
   const totalExpenses = expenseAggregate._sum.amount ?? 0;
+  const totalIncome = incomeAggregate._sum.amount ?? 0;
+  const ytdNetProfit = totalIncome - totalExpenses;
 
   // Build unified activity feed (10 most recent invoices + transactions)
   type ActivityItem =
@@ -85,6 +105,7 @@ export async function getClientDashboard(clientId: string) {
       unpaidCount,
       totalExpenses: Math.round(totalExpenses * 100) / 100,
       monthlyRetainer: client.monthlyRetainer ?? 0,
+      ytdNetProfit: Math.round(ytdNetProfit * 100) / 100,
     },
     invoices,
     transactions,

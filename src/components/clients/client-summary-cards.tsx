@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
-import { FileText, CheckCircle, AlertCircle, TrendingDown, RefreshCw } from "lucide-react";
+import { FileText, CheckCircle, AlertCircle, TrendingDown, RefreshCw, DollarSign } from "lucide-react";
 
 interface ClientSummaryCardsProps {
   summary: {
@@ -10,27 +10,28 @@ interface ClientSummaryCardsProps {
     unpaidCount: number;
     totalExpenses: number;
     monthlyRetainer: number;
+    ytdNetProfit: number;
   };
 }
 
 export function ClientSummaryCards({ summary }: ClientSummaryCardsProps) {
   const cards = [
     {
-      title: "Total Invoiced",
+      title: "YTD Invoiced",
       value: summary.totalInvoiced,
       icon: FileText,
       color: "text-blue-600",
       bg: "bg-blue-50",
     },
     {
-      title: "Total Paid",
+      title: "YTD Paid",
       value: summary.totalPaid,
       icon: CheckCircle,
       color: "text-green-600",
       bg: "bg-green-50",
     },
     {
-      title: "Outstanding",
+      title: "YTD Outstanding",
       value: summary.outstanding,
       icon: AlertCircle,
       color: "text-orange-600",
@@ -40,11 +41,18 @@ export function ClientSummaryCards({ summary }: ClientSummaryCardsProps) {
         : undefined,
     },
     {
-      title: "Total Expenses",
+      title: "YTD Expenses",
       value: summary.totalExpenses,
       icon: TrendingDown,
       color: "text-red-600",
       bg: "bg-red-50",
+    },
+    {
+      title: "YTD Net Profit",
+      value: summary.ytdNetProfit,
+      icon: DollarSign,
+      color: summary.ytdNetProfit >= 0 ? "text-emerald-600" : "text-red-600",
+      bg: summary.ytdNetProfit >= 0 ? "bg-emerald-50" : "bg-red-50",
     },
     {
       title: "Monthly Retainer",
@@ -56,7 +64,7 @@ export function ClientSummaryCards({ summary }: ClientSummaryCardsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
       {cards.map((card) => (
         <Card key={card.title}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
