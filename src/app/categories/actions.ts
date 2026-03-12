@@ -24,6 +24,7 @@ export async function createCategory(data: CategoryFormData) {
   try {
     const category = await prisma.category.create({ data: parsed.data });
     revalidatePath("/categories");
+    revalidatePath("/transactions");
     return { success: true as const, data: category };
   } catch (e) {
     return { success: false as const, error: "Failed to create category" };
@@ -42,6 +43,7 @@ export async function updateCategory(id: string, data: CategoryFormData) {
       data: parsed.data,
     });
     revalidatePath("/categories");
+    revalidatePath("/transactions");
     return { success: true as const, data: category };
   } catch (e) {
     return { success: false as const, error: "Failed to update category" };
@@ -62,6 +64,7 @@ export async function deleteCategory(id: string) {
 
     await prisma.category.delete({ where: { id } });
     revalidatePath("/categories");
+    revalidatePath("/transactions");
     return { success: true as const };
   } catch (e) {
     return { success: false as const, error: "Failed to delete category" };
@@ -75,6 +78,7 @@ export async function toggleCategoryActive(id: string, isActive: boolean) {
       data: { isActive },
     });
     revalidatePath("/categories");
+    revalidatePath("/transactions");
     return { success: true as const };
   } catch (e) {
     return { success: false as const, error: "Failed to update category" };
@@ -121,6 +125,7 @@ export async function seedDefaultCategories() {
     });
 
     revalidatePath("/categories");
+    revalidatePath("/transactions");
     return { success: true as const, created: toCreate.length };
   } catch (e) {
     return { success: false as const, error: "Failed to seed categories" };
